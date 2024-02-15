@@ -1,14 +1,21 @@
-const User = require('../models/User');   
-const Employee = require('../models/Employee'); 
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const Employee = require('../models/Employee');
+const Post = require('../models/Post');
+const { default: mongoose } = require('mongoose');
 
-
-const resolvers = {
-  Query: {
-    getAllEmployees: async () => {
+const Query = {
+  getAllEmployees: async () => {
       try {
         const employees = await Employee.find();
-        return employees;
+        return employees.map(employee => ({
+          id: employee._id.toString(),
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          email: employee.email,
+          gender: employee.gender,
+          salary: employee.salary
+        }));
       } catch (err) {
         throw new Error('Error fetching employees');
       }
@@ -16,41 +23,51 @@ const resolvers = {
     getEmployeeById: async (_, { id }) => {
       try {
         const employee = await Employee.findById(id);
-        return employee;
+        return {
+          id: employee._id.toString(),
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          email: employee.email,
+          gender: employee.gender,
+          salary: employee.salary
+        };
       } catch (err) {
         throw new Error('Error fetching employee by ID');
       }
     },
-    
     loginUser: async (_, { username, password }) => {
       try {
-        const user = await User.findOne({ $or: [{ username: username }, { email: username }] });
-        if (!user) {
-          throw new Error('User not found');
+        const user = await User.findOne({ username });
+        if (!user || user.password !== password) { // replace with password hash comparison in production
+          throw new Error('Invalid username or password');
         }
-        if (user.password !== password) {
-          throw new Error('Invalid password');
-        }
-        const token = jwt.sign({ userId: user.id }, 'your_secret_key', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '1h' });
         return { user, token };
-         } catch (err) {
+      } catch (err) {
         throw err;
       }
     },
-    
     users: async () => {
-      return await User.find();
+      try {
+        return await User.find();
+      } catch (err) {
+        throw err;
+      }
     },
     user: async (_, { id }) => {
-      return await User.findById(id);
+      try {
+        return await User.findById(id);
+      } catch (err) {
+        throw err;
+      }
     },
-  },
+  
   Mutation: {
     createUser: async (_, { username, email, password }) => {
       try {
-        const newUser = new User({ username, email, password });
-        const result = await newUser.save();
-        return result;
+        const newUser = new User({ username, email, password }); // ensure password is hashed in production
+        await newUser.save();
+        return newUser;
       } catch (err) {
         throw new Error('Error creating user');
       }
@@ -58,18 +75,17 @@ const resolvers = {
     createEmployee: async (_, { firstName, lastName, email, gender, salary }) => {
       try {
         const newEmployee = new Employee({ firstName, lastName, email, gender, salary });
-        const result = await newEmployee.save();
-        return result;
+        await newEmployee.save();
+        return newEmployee;
       } catch (err) {
         throw new Error('Error creating employee');
       }
     },
-    
     updateEmployee: async (_, { id, firstName, lastName, email, gender, salary }) => {
       try {
         const updatedEmployee = await Employee.findByIdAndUpdate(
           id,
-          { $set: { firstName, lastName, email, gender, salary }},
+          { firstName, lastName, email, gender, salary },
           { new: true }
         );
         return updatedEmployee;
@@ -77,7 +93,6 @@ const resolvers = {
         throw new Error('Error updating employee');
       }
     },
-    
     deleteEmployee: async (_, { id }) => {
       try {
         await Employee.findByIdAndDelete(id);
@@ -86,13 +101,16 @@ const resolvers = {
         throw new Error('Error deleting employee');
       }
     },
-    
   },
   User: {
     posts: async (parent) => {
-      
-    }
-  }
+      try {
+        return await Post.find({ author: parent._id });
+      } catch (err) {
+        throw err;
+      }
+    },
+  },
 };
 
-module.exports = resolvers;
+module.exports = { Query };
