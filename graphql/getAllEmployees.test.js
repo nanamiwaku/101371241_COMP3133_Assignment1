@@ -18,6 +18,6 @@ jest.mock('../models/Employee', () => {
 describe('getAllEmployees', () => {
   it('should fetch all employees', async () => {
     const employees = await getAllEmployees();
-    expect(employees).toBeDefined(); // 期待するアサーションを記述
-  });
+    expect(employees).toBeDefined(); 
+});
 });

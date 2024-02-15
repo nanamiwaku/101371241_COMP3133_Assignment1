@@ -38,7 +38,7 @@ const Query = {
     loginUser: async (_, { username, password }) => {
       try {
         const user = await User.findOne({ username });
-        if (!user || user.password !== password) { // replace with password hash comparison in production
+        if (!user || user.password !== password) { 
           throw new Error('Invalid username or password');
         }
         const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '1h' });
@@ -65,7 +65,7 @@ const Query = {
   Mutation: {
     createUser: async (_, { username, email, password }) => {
       try {
-        const newUser = new User({ username, email, password }); // ensure password is hashed in production
+        const newUser = new User({ username, email, password }); 
         await newUser.save();
         return newUser;
       } catch (err) {
