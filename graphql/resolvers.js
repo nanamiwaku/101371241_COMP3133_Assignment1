@@ -1,5 +1,5 @@
-const User = require('./models/User');
-const Employee = require('./models/Employee');
+const User = require('../models/User');   
+const Employee = require('../models/Employee'); 
 
 const resolvers = {
   Query: {
