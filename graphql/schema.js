@@ -10,7 +10,7 @@ const typeDefs = gql`
   }
 
   type User {
-    id: ID!
+    _id: ID!
     username: String!
     email: String!
     password: String!
@@ -18,14 +18,14 @@ const typeDefs = gql`
   }
 
   type Post {
-    id: ID!
+    _id: ID!
     title: String!
     content: String!
     author: User!
   }
 
   type Employee {
-    id: ID!
+    _id: ID!
     firstName: String!
     lastName: String!
     email: String!
@@ -34,7 +34,7 @@ const typeDefs = gql`
   }
 
   type Event {
-    id: ID!
+    _id: ID!
     title: String!
     date: Date!
   }
@@ -48,9 +48,9 @@ const typeDefs = gql`
 
   type Query {
     getAllEmployees: [Employee]
-    getEmployeeById(id: ID!): Employee
+    getEmployeeById(_id: ID!): Employee
     loginUser(username: String!, password: String!): User
-    user(id: ID!): User
+    user(_id: ID!): User
     users: [User!]!
     searchPosts(keyword: String!): [Post!]!
   }
@@ -59,10 +59,10 @@ const typeDefs = gql`
     createUser(username: String!, email: String!, password: String!): User
     createUserWithRole(input: CreateUserInput!): User!
     createEmployee(firstName: String!, lastName: String!, email: String!, gender: String, salary: Float): Employee
-    updateEmployee(id: ID!, firstName: String, lastName: String, email: String, gender: String, salary: Float): Employee
-    deleteEmployee(id: ID!): String
-    updatePost(id: ID!, title: String, content: String): Post
-    deletePost(id: ID!): Boolean
+    updateEmployee(_id: ID!, firstName: String, lastName: String, email: String, gender: String, salary: Float): Employee
+    deleteEmployee(_id: ID!): String
+    updatePost(_id: ID!, title: String, content: String): Post
+    deletePost(_id: ID!): Boolean
   }
 `;
 module.exports = typeDefs;
