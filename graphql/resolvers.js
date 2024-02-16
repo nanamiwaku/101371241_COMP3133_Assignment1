@@ -90,7 +90,7 @@ const Mutation = {
   updateEmployee: async (_, { id, firstName, lastName, email, gender, salary }) => {
     try {
       const updatedEmployee = await Employee.findByIdAndUpdate(
-        _id,
+        id,
         { firstName, lastName, email, gender, salary },
         { new: true }
       );
