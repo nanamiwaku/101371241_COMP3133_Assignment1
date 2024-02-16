@@ -8,7 +8,7 @@ const resolvers = require('./graphql/resolvers');
 const app = express();
 const port = process.env.PORT || 4000;
 
-mongoose.connect('mongodb+srv://nanamiwaku:PkkJdfZQiBTPejEu@cluster0.bzf8vmp.mongodb.net/?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://nanamiwaku:PkkJdfZQiBTPejEu@cluster0.bzf8vmp.mongodb.net/comp3133_assigment1', {
   
   useNewUrlParser: true,
   useUnifiedTopology: true,
