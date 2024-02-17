@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Employee = require('../models/Employee');
-const Post = require('../models/Post');
 
 const Query = {
   getAllEmployees: async () => {
@@ -37,18 +36,7 @@ const Query = {
       throw new Error('Error fetching employee by ID');
     }
   },
-  loginUser: async (_, { username, password }) => {
-    try {
-      const user = await User.findOne({ username });
-      if (!user || user.password !== password) {
-        throw new Error('Invalid username or password');
-      }
-      const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '1h' });
-      return { user, token };
-    } catch (err) {
-      throw err;
-    }
-  },
+  
   users: async () => {
     try {
       return await User.find();
@@ -66,18 +54,51 @@ const Query = {
 };
 
 const Mutation = {
-  createUser: async (_, { username, email, password }) => {
+  signUp: async (_, { username, email, password }) => {
     try {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         throw new Error('User already exists with that email');
       }
       const newUser = await User.create({ username, email, password });
-      return newUser;
+
+
+      const token = jwt.sign(
+        { userId: newUser._id, email: newUser.email },
+        'your_secret_key', 
+        { expiresIn: '1h' }
+      );
+
+      return { user: newUser, token };
     } catch (error) {
-      throw new Error(`Error creating user: ${error.message}`);
+      throw new Error(`Error signing up: ${error.message}`);
     }
   },
+  loginUser: async (_, { username, password }) => {
+    try {
+      const user = await User.findOne({ username });
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      const isMatch = password === user.password; 
+      if (!isMatch) {
+        throw new Error('Invalid password');
+      }
+
+      const token = jwt.sign(
+        { userId: user._id, email: user.email },
+        'your_secret_key',
+        { expiresIn: '1h' }
+      );
+
+      return { user, token };
+    } catch (err) {
+      throw new Error(`Login error: ${err.message}`);
+    }
+  },
+
+
   createEmployee: async (_, { firstName, lastName, email, gender, salary }) => {
     try {
       const newEmployee = new Employee({ firstName, lastName, email, gender, salary });

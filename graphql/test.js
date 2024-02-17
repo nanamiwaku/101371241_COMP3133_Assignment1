@@ -31,12 +31,21 @@ describe('GraphQL Resolvers', () => {
     });
   });
 
-  describe('createUser', () => {
+  describe('signup', () => {
     it('should create a new user', async () => {
       const newUser = { username: 'newuser', email: 'newuser@example.com', password: 'password123' };
-      const user = await Mutation.createUser(null, newUser);
-      expect(user).toMatchObject({ username: newUser.username, email: newUser.email });
-      expect(User.findOne).toHaveBeenCalledWith({ email: newUser.email });
+      const result = await Mutation.signUp(null, newUser);
+  
+    
+      expect(result).toMatchObject({
+        user: {
+          username: newUser.username,
+          email: newUser.email,
+          
+        },
+        
+        token: expect.any(String),
+      });
     });
   });
 

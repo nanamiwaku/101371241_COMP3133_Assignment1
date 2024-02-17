@@ -24,6 +24,11 @@ const typeDefs = gql`
     author: User!
   }
 
+  type AuthPayload {
+    user: User
+    token: String
+  }
+
   type Employee {
     _id: ID!
     firstName: String!
@@ -39,7 +44,7 @@ const typeDefs = gql`
     date: Date!
   }
 
-  input CreateUserInput {
+  input SignupUserInput {
     username: String!
     email: String!
     password: String!
@@ -49,20 +54,21 @@ const typeDefs = gql`
   type Query {
     getAllEmployees: [Employee]
     getEmployeeById(_id: ID!): Employee
-    loginUser(username: String!, password: String!): User
     user(_id: ID!): User
     users: [User!]!
-    searchPosts(keyword: String!): [Post!]!
   }
 
   type Mutation {
-    createUser(username: String!, email: String!, password: String!): User
-    createUserWithRole(input: CreateUserInput!): User!
+    signUp(username: String!, email: String!, password: String!): AuthPayload
+    createUserWithRole(input: SignupUserInput!): AuthPayload
     createEmployee(firstName: String!, lastName: String!, email: String!, gender: String, salary: Float): Employee
     updateEmployee(_id: ID!, firstName: String, lastName: String, email: String, gender: String, salary: Float): Employee
     deleteEmployee(_id: ID!): String
     updatePost(_id: ID!, title: String, content: String): Post
     deletePost(_id: ID!): Boolean
+    loginUser(username: String!, password: String!): AuthPayload  # Ensure it's defined to return AuthPayload
   }
+  
 `;
+
 module.exports = typeDefs;
