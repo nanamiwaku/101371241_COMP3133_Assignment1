@@ -1,8 +1,8 @@
 const { Query, Mutation } = require('./resolvers');
-const Employee = require('../models/Employee');
-const User = require('../models/User');
+const Employee = require('./models/employee');
+const User = require('./models/user');
 
-jest.mock('../models/Employee', () => ({
+jest.mock('../models/employee', () => ({
   find: jest.fn().mockResolvedValue([
     { _id: '1', firstName: 'John', lastName: 'Doe', email: 'john@example.com', gender: 'Male', salary: 50000 },
     { _id: '2', firstName: 'Mimi', lastName: 'Doe', email: 'jane@example.com', gender: 'Female', salary: 55000 },
@@ -12,7 +12,7 @@ jest.mock('../models/Employee', () => ({
   }),
 }));
 
-jest.mock('../models/User', () => ({
+jest.mock('../models/user', () => ({
   findOne: jest.fn(),
   create: jest.fn().mockResolvedValue({
     _id: '1',

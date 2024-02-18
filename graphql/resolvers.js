@@ -1,143 +1,79 @@
+const User = require('./models/user');
+const Employee = require('./models/employee');
+
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const Employee = require('../models/Employee');
 
-const Query = {
-  getAllEmployees: async () => {
-    try {
-      const employees = await Employee.find();
-      return employees.map(employee => ({
-        _id: employee._id.toString(),
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        email: employee.email,
-        gender: employee.gender,
-        salary: employee.salary
-      }));
-    } catch (err) {
-      throw new Error('Error fetching employees');
-    }
-  },
-  getEmployeeById: async (_, { id }) => {
-    try {
-      const employee = await Employee.findById(id);
-      if (!employee) {
-        throw new Error('Employee not found');
-      }
-      return {
-        _id: employee._id.toString(),
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        email: employee.email,
-        gender: employee.gender,
-        salary: employee.salary
-      };
-    } catch (err) {
-      throw new Error('Error fetching employee by ID');
-    }
-  },
-  
-  users: async () => {
-    try {
-      return await User.find();
-    } catch (err) {
-      throw err;
-    }
-  },
-  user: async (_, { id }) => {
-    try {
-      return await User.findById(id);
-    } catch (err) {
-      throw err;
-    }
-  },
-};
-
-const Mutation = {
-  signUp: async (_, { username, email, password }) => {
-    try {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        throw new Error('User already exists with that email');
-      }
-      const newUser = await User.create({ username, email, password });
-
-
-      const token = jwt.sign(
-        { userId: newUser._id, email: newUser.email },
-        'your_secret_key', 
-        { expiresIn: '1h' }
-      );
-
-      return { user: newUser, token };
-    } catch (error) {
-      throw new Error(`Error signing up: ${error.message}`);
-    }
-  },
-  loginUser: async (_, { username, password }) => {
-    try {
-      const user = await User.findOne({ username });
+const resolvers = {
+  Query: {
+    login: async (_, { username, password }) => {
+      const user = await User.findOne({ $or: [{ username }, { email: username }] });
       if (!user) {
         throw new Error('User not found');
       }
-      
-      const isMatch = password === user.password; 
+
+      const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        throw new Error('Invalid password');
+        throw new Error('Incorrect password');
       }
 
-      const token = jwt.sign(
-        { userId: user._id, email: user.email },
-        'your_secret_key',
-        { expiresIn: '1h' }
-      );
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
 
-      return { user, token };
-    } catch (err) {
-      throw new Error(`Login error: ${err.message}`);
-    }
+      return { ...user._doc, _id: user.id, token };
+    },
+    getAllEmployees: async () => {
+      return await Employee.find({});
+    },
+    searchEmployeeByEid: async (_, { eid }) => {
+      return await Employee.findById(eid);
+    },
   },
+  Mutation: {
+    signup: async (_, { username, email, password }) => {
+      const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+      if (existingUser) {
+        throw new Error('User already exists');
+      }
 
+      const hashedPassword = await bcrypt.hash(password, 12);
 
-  createEmployee: async (_, { firstName, lastName, email, gender, salary }) => {
-    try {
-      const newEmployee = new Employee({ firstName, lastName, email, gender, salary });
-      await newEmployee.save();
-      return newEmployee;
-    } catch (err) {
-      throw new Error('Error creating employee');
-    }
-  },
-  updateEmployee: async (_, { id, firstName, lastName, email, gender, salary }) => {
-    try {
+      const user = new User({
+        username,
+        email,
+        password: hashedPassword,
+      });
+
+      const result = await user.save();
+
+      return { ...result._doc, _id: result.id };
+    },
+    addNewEmployee: async (_, { first_name, last_name, email, gender, salary }) => {
+      const newEmployee = new Employee({
+        first_name,
+        last_name,
+        email,
+        gender,
+        salary,
+      });
+
+      const result = await newEmployee.save();
+
+      return result;
+    },
+    updateEmployeeByEid: async (_, { eid, first_name, last_name, email, gender, salary }) => {
       const updatedEmployee = await Employee.findByIdAndUpdate(
-        id,
-        { firstName, lastName, email, gender, salary },
+        eid,
+        { first_name, last_name, email, gender, salary },
         { new: true }
       );
+
       return updatedEmployee;
-    } catch (err) {
-      throw new Error('Error updating employee');
-    }
-  },
-  deleteEmployee: async (_, { id }) => {
-    try {
-      await Employee.findByIdAndDelete(id);
-      return 'Employee deleted successfully';
-    } catch (err) {
-      throw new Error('Error deleting employee');
-    }
+    },
+    deleteEmployeeByEid: async (_, { eid }) => {
+      await Employee.findByIdAndDelete(eid);
+      return "Employee deleted successfully";
+    },
   },
 };
 
-const UserResolvers = {
-  posts: async (parent) => {
-    try {
-      return await Post.find({ author: parent._id });
-    } catch (err) {
-      throw err;
-    }
-  },
-};
-
-module.exports = { Query, Mutation, User: UserResolvers };
+module.exports = resolvers;
