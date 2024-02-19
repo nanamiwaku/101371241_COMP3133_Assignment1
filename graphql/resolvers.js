@@ -1,8 +1,6 @@
-const User = require('./models/user');
-const Employee = require('./models/employee');
-
+const User = require('../models/user');
+const Employee = require('../models/employee');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 const resolvers = {
   Query: {
@@ -17,9 +15,8 @@ const resolvers = {
         throw new Error('Incorrect password');
       }
 
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
 
-      return { ...user._doc, _id: user.id, token };
+      return { ...user._doc, _id: user.id };
     },
     getAllEmployees: async () => {
       return await Employee.find({});
@@ -77,3 +74,4 @@ const resolvers = {
 };
 
 module.exports = resolvers;
+
